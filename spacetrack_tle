@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+# Example crontab:
+#
+# */14 *  * * * /root/spacetrack_tle
+#
+
+source_dir="$(cd $(dirname ${BASH_SOURCE[0]}) && pwd)"
+cd "$source_dir"
+source credentials
+
+temp_file=$(mktemp)
+wget -q --post-data="identity=${USER}&password=${PASSWORD}&query=https://www.space-track.org/basicspacedata/query/class/tle_latest/NORAD_CAT_ID/25544/ORDINAL/1/EPOCH/%3Enow-30/format/3le" --cookies=on --keep-session-cookies --save-cookies=/tmp/cookies.txt 'https://www.space-track.org/ajaxauth/login' -O ${temp_file};
+if [ $? == 0 ]; then
+ sed -i 's/0 ISS (ZARYA)/ISS (ZARYA)/' ${temp_file}
+ mv -f ${temp_file} ${OUTPUT_DIR}/iss.txt;
+fi
