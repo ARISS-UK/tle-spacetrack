@@ -1,5 +1,5 @@
 
-CFLAGS=-O3 -Wall -Wextra -Wpedantic -Werror
+CFLAGS=-O3 -std=gnu11 -D_GNU_SOURCE -Wall -Wextra -Wpedantic -Werror
 
 LIBPREDICT_DIR = predict
 LIBPREDICT_SRCS += $(LIBPREDICT_DIR)/julian_date.c \
