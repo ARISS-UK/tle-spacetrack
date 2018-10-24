@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <string.h>
+#include <ctype.h>
+#include <inttypes.h>
 #include <asm/errno.h>
 
 #include "predict/predict.h"
@@ -74,6 +76,60 @@ int tle_load(char *_filename, struct tle_t *_tle)
     return 0;
 }
 
+bool tle_checksum(struct tle_t *_tle)
+{
+  char char_a, char_b;
+  int i, check_a, check_b;
+
+  if(strlen(_tle->elements[0]) != (70+1))
+  {
+    return false;
+  }
+
+  if(strlen(_tle->elements[1]) != (70+1))
+  {
+    return false;
+  }
+
+  check_a = 0;
+  check_b = 0;
+
+  for(i=0; i<68; i++)
+  {
+    char_a = _tle->elements[0][i];
+    if(isdigit(char_a))
+    {
+      check_a += char_a - '0';
+    }
+    else if(char_a == '-')
+    {
+      check_a += 1;
+    }
+    
+    char_b = _tle->elements[1][i];
+    if(isdigit(char_b))
+    {
+      check_b += char_b - '0';
+    }
+    else if(char_b == '-')
+    {
+      check_b += 1;
+    }
+  }
+
+  if((check_a % 10) != (_tle->elements[0][68] - '0'))
+  {
+    return false;
+  }
+  
+  if((check_b % 10) != (_tle->elements[1][68] - '0'))
+  {
+    return false;
+  }
+
+  return true;
+}
+
 int main(int argc, char **argv)
 {
   double current_julian;
@@ -94,6 +150,14 @@ int main(int argc, char **argv)
   if(tle_load(argv[1], &tle) < 0)
   {
     printf(TXT_RED"Error loading TLE from file!"TXT_NORM"\n");
+    exit(1);
+  }
+  printf(TXT_GRN"OK"TXT_NORM"\n");
+
+  printf("Verifying TLE checksum..     ");
+  if(!tle_checksum(&tle))
+  {
+    printf(TXT_RED"Checksum Failed!"TXT_NORM"\n");
     exit(1);
   }
   printf(TXT_GRN"OK"TXT_NORM"\n");
@@ -140,3 +204,4 @@ int main(int argc, char **argv)
   predict_destroy_orbital_elements(elements);
   exit(0);
 }
+
